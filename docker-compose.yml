@@ -1,0 +1,23 @@
+# Local PostgreSQL for development.
+# Start it with:  pnpm db:up   (docker compose up -d)
+services:
+  db:
+    image: postgres:17-alpine
+    container_name: revenue-dashboard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: revenue
+      POSTGRES_PASSWORD: revenue
+      POSTGRES_DB: revenue_dashboard
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U revenue -d revenue_dashboard"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  db_data:

@@ -1,0 +1,7 @@
+# Normalize line endings for cross-platform development.
+# The repo targets Linux/macOS setup instructions; keep LF everywhere.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary

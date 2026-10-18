@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment files (never commit real secrets)
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test output
+coverage/
+
+# Generated Prisma client
+src/generated/
+
+# Prisma agent skills (installed by `prisma init`, local-only)
+.agents/
+.claude/
+.windsurf/
+skills-lock.json
+
+# OS files
+.DS_Store
+Thumbs.db
+
+/generated/prisma
