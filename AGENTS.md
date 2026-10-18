@@ -17,6 +17,10 @@ Express 5 + TypeScript (ESM) REST API. PostgreSQL through Prisma ORM 7. Admin au
 - The client only works with the pg driver adapter — import the shared instance from `src/lib/prisma.ts`, never construct your own.
 - `pnpm db:seed` resets `daily_metrics` and `events`; do not put data worth keeping in the seed.
 
+## Agent skills
+
+Official Prisma agent skills live in `.agents/skills/` (canonical; pinned by `skills-lock.json`). Keep them there instead of duplicating into tool-specific folders like `.claude/` or `.windsurf/`. Refresh: `pnpm dlx skills@1.5.14 add prisma/skills --agent cursor claude-code codex windsurf --skill "*" -y`.
+
 ## Conventions
 
 - ESM + NodeNext: relative imports need the `.js` extension.
