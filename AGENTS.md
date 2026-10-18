@@ -8,7 +8,13 @@ Express 5 + TypeScript (ESM) REST API. PostgreSQL through Prisma ORM 7. Admin au
 - Start local DB: `pnpm db:up` — Docker Compose, postgres:17 on port 5432
 - Fresh setup: `pnpm db:setup` (migrate deploy + generate + seed)
 - Dev server: `pnpm dev` — smoke test with `curl http://localhost:4000/health`
-- Before committing: `pnpm typecheck` (no test suite yet)
+- Before committing: `pnpm typecheck` and `pnpm test`
+
+## Tests
+
+Vitest + supertest. `pnpm test` runs against a dedicated `<database>_test`
+database that is created and migrated automatically; each test file truncates
+it first, so never point `TEST_DATABASE_URL` at data you care about.
 
 ## Prisma 7
 
