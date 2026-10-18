@@ -9,13 +9,13 @@ interface. Data is stored in PostgreSQL.
 
 ## Tech stack
 
-| Concern    | Choice                                      |
-| ---------- | ------------------------------------------- |
-| Runtime    | Node.js + Express 5 + TypeScript            |
-| Database   | PostgreSQL 17 (Docker Compose for local dev)|
-| ORM        | Prisma ORM 7 (migrations + seed)            |
-| Validation | Zod                                         |
-| Auth       | Server-side sessions, httpOnly cookie       |
+| Concern    | Choice                                       |
+| ---------- | -------------------------------------------- |
+| Runtime    | Node.js + Express 5 + TypeScript             |
+| Database   | PostgreSQL 17 (Docker Compose for local dev) |
+| ORM        | Prisma ORM 7 (migrations + seed)             |
+| Validation | Zod                                          |
+| Auth       | Server-side sessions, httpOnly cookie        |
 
 > Prisma packages are pinned to the latest **stable** major (v7, `prisma@prev`)
 > on purpose: Prisma ORM 8 was still a release candidate at the time of
@@ -58,36 +58,36 @@ curl http://localhost:4000/health
 
 The seed creates an admin account from the values in `.env`:
 
-| Email                | Password    |
-| -------------------- | ----------- |
-| `admin@revenue.local`| `admin1234` |
+| Email                 | Password    |
+| --------------------- | ----------- |
+| `admin@revenue.local` | `admin1234` |
 
 These credentials are for **local development only** — never reuse them
 anywhere real.
 
 ## Environment variables
 
-| Variable              | Default                                             | Purpose                                   |
-| --------------------- | --------------------------------------------------- | ----------------------------------------- |
-| `DATABASE_URL`        | `postgresql://revenue:revenue@localhost:5432/...`   | PostgreSQL connection string              |
-| `NODE_ENV`            | `development`                                       | Runtime mode                              |
-| `PORT`                | `4000`                                              | HTTP port                                 |
-| `CORS_ORIGIN`         | `http://localhost:3000`                             | Frontend origin allowed to send cookies   |
-| `SESSION_TTL_DAYS`    | `7`                                                 | Admin session lifetime                    |
-| `SEED_ADMIN_EMAIL`    | `admin@revenue.local`                               | Email of the seeded admin                 |
-| `SEED_ADMIN_PASSWORD` | `admin1234`                                         | Password of the seeded admin              |
-| `SEED_ADMIN_NAME`     | `Admin`                                             | Display name of the seeded admin          |
+| Variable              | Default                                           | Purpose                                 |
+| --------------------- | ------------------------------------------------- | --------------------------------------- |
+| `DATABASE_URL`        | `postgresql://revenue:revenue@localhost:5432/...` | PostgreSQL connection string            |
+| `NODE_ENV`            | `development`                                     | Runtime mode                            |
+| `PORT`                | `4000`                                            | HTTP port                               |
+| `CORS_ORIGIN`         | `http://localhost:3000`                           | Frontend origin allowed to send cookies |
+| `SESSION_TTL_DAYS`    | `7`                                               | Admin session lifetime                  |
+| `SEED_ADMIN_EMAIL`    | `admin@revenue.local`                             | Email of the seeded admin               |
+| `SEED_ADMIN_PASSWORD` | `admin1234`                                       | Password of the seeded admin            |
+| `SEED_ADMIN_NAME`     | `Admin`                                           | Display name of the seeded admin        |
 
 ## Database
 
 ### Schema
 
-| Table           | Purpose                                                                 |
-| --------------- | ----------------------------------------------------------------------- |
-| `users`         | Admin accounts (bcrypt password hash)                                   |
-| `sessions`      | Server-side admin sessions (SHA-256 hashed opaque token, expiry)        |
+| Table           | Purpose                                                                     |
+| --------------- | --------------------------------------------------------------------------- |
+| `users`         | Admin accounts (bcrypt password hash)                                       |
+| `sessions`      | Server-side admin sessions (SHA-256 hashed opaque token, expiry)            |
 | `daily_metrics` | One row per calendar day: POS revenue, Eatclub revenue, labour cost, covers |
-| `events`        | Positive/negative events rendered as chart annotations                  |
+| `events`        | Positive/negative events rendered as chart annotations                      |
 
 ### Migrations
 
@@ -112,9 +112,9 @@ pnpm db:reset       # drop everything, re-apply migrations and re-seed
 
 ## API endpoints
 
-| Method | Path      | Auth | Description                        |
-| ------ | --------- | ---- | ---------------------------------- |
-| GET    | `/health` | —    | Liveness + database connectivity   |
+| Method | Path      | Auth | Description                      |
+| ------ | --------- | ---- | -------------------------------- |
+| GET    | `/health` | —    | Liveness + database connectivity |
 
 Dashboard and admin endpoints are implemented in the next milestone and will
 be documented here as they land.
@@ -122,21 +122,23 @@ be documented here as they land.
 Error responses always use a consistent shape:
 
 ```json
-{ "error": { "code": "NOT_FOUND", "message": "Route GET /nope does not exist" } }
+{
+  "error": { "code": "NOT_FOUND", "message": "Route GET /nope does not exist" }
+}
 ```
 
 ## Scripts reference
 
-| Script            | What it does                                       |
-| ----------------- | -------------------------------------------------- |
-| `pnpm dev`        | Start API with hot reload (`tsx watch`)            |
-| `pnpm build`      | Compile TypeScript to `dist/`                      |
-| `pnpm start`      | Run the compiled build (`node dist/index.js`)      |
-| `pnpm typecheck`  | Type-check without emitting                        |
-| `pnpm format`     | Format the codebase with Prettier                  |
-| `pnpm db:up`      | Start the PostgreSQL container                     |
-| `pnpm db:down`    | Stop the PostgreSQL container                      |
-| `pnpm db:setup`   | Migrate + generate + seed (fresh setup helper)     |
+| Script           | What it does                                   |
+| ---------------- | ---------------------------------------------- |
+| `pnpm dev`       | Start API with hot reload (`tsx watch`)        |
+| `pnpm build`     | Compile TypeScript to `dist/`                  |
+| `pnpm start`     | Run the compiled build (`node dist/index.js`)  |
+| `pnpm typecheck` | Type-check without emitting                    |
+| `pnpm format`    | Format the codebase with Prettier              |
+| `pnpm db:up`     | Start the PostgreSQL container                 |
+| `pnpm db:down`   | Stop the PostgreSQL container                  |
+| `pnpm db:setup`  | Migrate + generate + seed (fresh setup helper) |
 
 ## Project structure
 

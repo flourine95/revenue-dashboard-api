@@ -1,6 +1,3 @@
-// Revenue dashboard data model.
-// Docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client"
   output   = "../src/generated/prisma"
@@ -10,7 +7,6 @@ datasource db {
   provider = "postgresql"
 }
 
-/// Admin user that can sign in and manage dashboard data.
 model User {
   id           String    @id @default(cuid())
   email        String    @unique
@@ -23,9 +19,9 @@ model User {
   @@map("users")
 }
 
-/// Server-side admin session (opaque token, stored hashed).
 model Session {
   id        String   @id @default(cuid())
+  /// SHA-256 hash of the token; the raw token lives only in the auth cookie.
   tokenHash String   @unique @map("token_hash")
   userId    String   @map("user_id")
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -36,7 +32,6 @@ model Session {
   @@map("sessions")
 }
 
-/// One row per calendar day with the restaurant's operational metrics.
 model DailyMetric {
   id             String   @id @default(cuid())
   date           DateTime @unique @db.Date
@@ -50,7 +45,6 @@ model DailyMetric {
   @@map("daily_metrics")
 }
 
-/// Positive or negative event rendered as an annotation on the dashboard chart.
 model Event {
   id          String    @id @default(cuid())
   date        DateTime  @db.Date

@@ -1,5 +1,4 @@
-# Normalize line endings for cross-platform development.
-# The repo targets Linux/macOS setup instructions; keep LF everywhere.
+# Keep LF endings on every platform (setup docs target Linux/macOS).
 * text=auto eol=lf
 
 *.png binary

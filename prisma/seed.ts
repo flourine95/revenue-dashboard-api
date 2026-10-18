@@ -6,22 +6,10 @@ import { PrismaClient } from "../src/generated/prisma/client.js"
 const adapter = new PrismaPg({ connectionString: env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter })
 
-/**
- * Demo seed data for the revenue dashboard.
- *
- * - Generates WEEKS_OF_HISTORY weeks of daily metrics, relative to the day the
- *   seed is run, so "This Week" always has data. The full current week
- *   (Monday–Sunday) is filled, even days after today, so the dashboard demo
- *   looks complete at any time of the week.
- * - Upserts the demo admin account from SEED_ADMIN_EMAIL / SEED_ADMIN_PASSWORD.
- * - Resets daily_metrics and events (safe to re-run).
- */
-
 const WEEKS_OF_HISTORY = 12
+const CURRENT_WEEK_BOOST = 0.045
 
-// ---------------------------------------------------------------------------
-// Deterministic pseudo-random generator so seeds are reproducible.
-// ---------------------------------------------------------------------------
+// Deterministic PRNG so repeated seeds produce the same values.
 function mulberry32(seed: number): () => number {
   let a = seed >>> 0
   return () => {
@@ -39,9 +27,6 @@ function between(min: number, max: number): number {
   return min + rand() * (max - min)
 }
 
-// ---------------------------------------------------------------------------
-// Date helpers — all stored as UTC calendar dates (Postgres `date`).
-// ---------------------------------------------------------------------------
 function toUtcDate(year: number, monthIndex: number, day: number): Date {
   return new Date(Date.UTC(year, monthIndex, day))
 }
@@ -55,15 +40,11 @@ function addDays(date: Date, days: number): Date {
   return new Date(date.getTime() + days * 24 * 60 * 60 * 1000)
 }
 
-/** Monday of the week containing `date`. */
 function mondayOf(date: Date): Date {
   const daysSinceMonday = (date.getUTCDay() + 6) % 7
   return addDays(date, -daysSinceMonday)
 }
 
-// ---------------------------------------------------------------------------
-// Seed sections
-// ---------------------------------------------------------------------------
 type MetricRow = {
   date: Date
   posRevenue: number
@@ -78,12 +59,14 @@ async function seedDailyMetrics(): Promise<number> {
 
   for (let weeksAgo = WEEKS_OF_HISTORY - 1; weeksAgo >= 0; weeksAgo--) {
     const weekMonday = addDays(currentMonday, -7 * weeksAgo)
-    // Mild upward trend over time; the current week gets an extra boost so the
-    // "vs previous period" comparison lands around +5–7%, like the reference.
+    // Current week lands ~+5–7% over the previous one, like the reference UI.
     const trend =
-      1 + 0.012 * (WEEKS_OF_HISTORY - 1 - weeksAgo) + (weeksAgo === 0 ? 0.045 : 0)
+      1 +
+      0.012 * (WEEKS_OF_HISTORY - 1 - weeksAgo) +
+      (weeksAgo === 0 ? CURRENT_WEEK_BOOST : 0)
 
     for (let day = 0; day < 7; day++) {
+      // Days after today are filled too, so the demo week always looks complete.
       const date = addDays(weekMonday, day)
       const isWeekend = day >= 5
 
@@ -91,7 +74,9 @@ async function seedDailyMetrics(): Promise<number> {
       const posRevenue = Math.round(posBase * trend * between(0.95, 1.05))
 
       const eatclubShare = isWeekend ? between(0.14, 0.28) : between(0.08, 0.2)
-      const eatclubRevenue = Math.round(posRevenue * eatclubShare * between(0.6, 1.15))
+      const eatclubRevenue = Math.round(
+        posRevenue * eatclubShare * between(0.6, 1.15)
+      )
 
       const labourRatio = isWeekend ? between(0.33, 0.4) : between(0.34, 0.43)
       const labourCost = Math.round((posRevenue + eatclubRevenue) * labourRatio)
@@ -110,41 +95,45 @@ async function seedDailyMetrics(): Promise<number> {
 async function seedEvents(): Promise<number> {
   const currentMonday = mondayOf(todayUtc())
 
+  // Relative to the current week; dayIndex 0 = Monday.
+  const dayOfWeek = (weeksAgo: number, dayIndex: number): Date =>
+    addDays(currentMonday, -7 * weeksAgo + dayIndex)
+
   const events = [
     {
-      // Friday of the current week (day index 4).
-      date: addDays(currentMonday, 4),
+      date: dayOfWeek(0, 4),
       type: "negative",
       title: "Kitchen equipment failure",
       description:
         "Oven breakdown during Friday dinner service — reduced seating capacity for about two hours.",
     },
     {
-      // Saturday of the current week (day index 5).
-      date: addDays(currentMonday, 5),
+      date: dayOfWeek(0, 5),
       type: "positive",
       title: "Local festival boost",
       description:
         "Street festival nearby brought a wave of walk-ins and a strong late-night crowd.",
     },
     {
-      date: addDays(currentMonday, -7 * 3 + 2),
+      date: dayOfWeek(3, 2),
       type: "positive",
       title: "Eatclub campaign launch",
       description:
         "First week of the Eatclub promotion — platform orders doubled on weekdays.",
     },
     {
-      date: addDays(currentMonday, -7 * 6 + 3),
+      date: dayOfWeek(6, 3),
       type: "negative",
       title: "Stormy weather",
-      description: "Heavy rain through the evening — dine-in covers down noticeably.",
+      description:
+        "Heavy rain through the evening — dine-in covers down noticeably.",
     },
     {
-      date: addDays(currentMonday, -7 * 10 + 4),
+      date: dayOfWeek(10, 4),
       type: "positive",
       title: "Corporate booking",
-      description: "Private dining room booked for a 32-person corporate dinner.",
+      description:
+        "Private dining room booked for a 32-person corporate dinner.",
     },
   ] satisfies Array<{
     date: Date

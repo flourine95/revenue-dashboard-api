@@ -1,9 +1,5 @@
 import type { NextFunction, Request, Response } from "express"
 
-/**
- * Error with an HTTP status and a stable machine-readable code.
- * The API always responds with `{ error: { code, message, details? } }`.
- */
 export class ApiError extends Error {
   constructor(
     public readonly status: number,
