@@ -1,6 +1,7 @@
 import request from "supertest"
 import { beforeEach, describe, expect, it } from "vitest"
 import { createApp } from "../../src/app.js"
+import { env } from "../../src/config/env.js"
 import { toUtcDate } from "../../src/lib/dates.js"
 import { prisma } from "../../src/lib/prisma.js"
 import { createMetric, resetDb } from "../helpers.js"
@@ -121,5 +122,19 @@ describe("GET /api/dashboard", () => {
       "/api/dashboard?from=2026-10-18&to=2026-10-12"
     )
     expect(reversed.status).toBe(400)
+  })
+
+  it("includes the configured weekly budget in both shapes", async () => {
+    const expected = { weeklyRevenue: env.BUDGET_WEEKLY_REVENUE }
+
+    const withComparison = await request(app).get(
+      "/api/dashboard?from=2026-10-12&to=2026-10-18"
+    )
+    expect(withComparison.body.budget).toEqual(expected)
+
+    const withoutComparison = await request(app).get(
+      "/api/dashboard?from=2026-10-12&to=2026-10-18&compare=false"
+    )
+    expect(withoutComparison.body.budget).toEqual(expected)
   })
 })

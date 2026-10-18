@@ -9,6 +9,7 @@ const envSchema = z.object({
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
   CORS_ORIGIN: z.string().default("http://localhost:3000"),
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(7),
+  BUDGET_WEEKLY_REVENUE: z.coerce.number().nonnegative().default(20000),
   SEED_ADMIN_EMAIL: z.string().default("admin@revenue.local"),
   SEED_ADMIN_PASSWORD: z.string().default("admin1234"),
   SEED_ADMIN_NAME: z.string().default("Admin"),

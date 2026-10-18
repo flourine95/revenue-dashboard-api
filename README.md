@@ -67,16 +67,17 @@ anywhere real.
 
 ## Environment variables
 
-| Variable              | Default                                           | Purpose                                 |
-| --------------------- | ------------------------------------------------- | --------------------------------------- |
-| `DATABASE_URL`        | `postgresql://revenue:revenue@localhost:5432/...` | PostgreSQL connection string            |
-| `NODE_ENV`            | `development`                                     | Runtime mode                            |
-| `PORT`                | `4000`                                            | HTTP port                               |
-| `CORS_ORIGIN`         | `http://localhost:3000`                           | Frontend origin allowed to send cookies |
-| `SESSION_TTL_DAYS`    | `7`                                               | Admin session lifetime                  |
-| `SEED_ADMIN_EMAIL`    | `admin@revenue.local`                             | Email of the seeded admin               |
-| `SEED_ADMIN_PASSWORD` | `admin1234`                                       | Password of the seeded admin            |
-| `SEED_ADMIN_NAME`     | `Admin`                                           | Display name of the seeded admin        |
+| Variable                | Default                                           | Purpose                                                                          |
+| ----------------------- | ------------------------------------------------- | -------------------------------------------------------------------------------- |
+| `DATABASE_URL`          | `postgresql://revenue:revenue@localhost:5432/...` | PostgreSQL connection string                                                     |
+| `NODE_ENV`              | `development`                                     | Runtime mode                                                                     |
+| `PORT`                  | `4000`                                            | HTTP port                                                                        |
+| `CORS_ORIGIN`           | `http://localhost:3000`                           | Frontend origin allowed to send cookies                                          |
+| `SESSION_TTL_DAYS`      | `7`                                               | Admin session lifetime                                                           |
+| `BUDGET_WEEKLY_REVENUE` | `20000`                                           | Weekly revenue budget exposed as `budget.weeklyRevenue` in the dashboard payload |
+| `SEED_ADMIN_EMAIL`      | `admin@revenue.local`                             | Email of the seeded admin                                                        |
+| `SEED_ADMIN_PASSWORD`   | `admin1234`                                       | Password of the seeded admin                                                     |
+| `SEED_ADMIN_NAME`       | `Admin`                                           | Display name of the seeded admin                                                 |
 
 `TEST_DATABASE_URL` is optional and only used by the test suite — see
 [Tests](#tests).
@@ -185,6 +186,7 @@ key is omitted when `compare=false`.
     "averagePerDay": 2619.43,
     "totalCovers": 1000
   },
+  "budget": { "weeklyRevenue": 20000 },
   "series": [
     {
       "date": "2026-10-12",

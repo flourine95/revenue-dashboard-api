@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { z } from "zod"
+import { env } from "../config/env.js"
 import { formatDate, resolveRange } from "../lib/dates.js"
 import { prisma } from "../lib/prisma.js"
 import { serializeEvent } from "../lib/serialize.js"
@@ -49,9 +50,10 @@ dashboardRouter.get("/", async (req, res) => {
   const kpis = computeKpis(series)
   const period = { from: formatDate(from), to: formatDate(to) }
   const events = eventRows.map(serializeEvent)
+  const budget = { weeklyRevenue: env.BUDGET_WEEKLY_REVENUE }
 
   if (previous === null) {
-    res.json({ period, kpis, series, events })
+    res.json({ period, kpis, series, events, budget })
     return
   }
 
@@ -63,6 +65,7 @@ dashboardRouter.get("/", async (req, res) => {
     kpis,
     series,
     events,
+    budget,
     comparison: {
       period: {
         from: formatDate(previous.from),
