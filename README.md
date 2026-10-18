@@ -13,9 +13,13 @@ interface. Data is stored in PostgreSQL.
 | ---------- | ------------------------------------------- |
 | Runtime    | Node.js + Express 5 + TypeScript            |
 | Database   | PostgreSQL 17 (Docker Compose for local dev)|
-| ORM        | Prisma 7 (migrations + seed)                |
+| ORM        | Prisma ORM 7 (migrations + seed)            |
 | Validation | Zod                                         |
 | Auth       | Server-side sessions, httpOnly cookie       |
+
+> Prisma packages are pinned to the latest **stable** major (v7, `prisma@prev`)
+> on purpose: Prisma ORM 8 was still a release candidate at the time of
+> writing, and v7 remains fully supported.
 
 ## Prerequisites
 
