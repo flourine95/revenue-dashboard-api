@@ -10,6 +10,7 @@ import {
   computeKpis,
   percentDelta,
   previousRange,
+  previousYearRange,
 } from "../services/dashboard.js"
 
 const dashboardQuerySchema = z.object({
@@ -25,6 +26,54 @@ const metricRange = (from: Date, to: Date) =>
   })
 
 export const dashboardRouter = Router()
+
+/**
+ * The same week one year earlier, with deltas against the requested period.
+ * Kept separate from the main dashboard payload so the chart request stays
+ * cheap when the year-over-year tab is not open.
+ */
+dashboardRouter.get("/year-over-year", async (req, res) => {
+  const query = parseInput(dashboardQuerySchema, req.query)
+  const { from, to } = resolveRange(query.from, query.to)
+  const yearAgo = previousYearRange(from, to)
+
+  const [currentSeries, yearAgoSeries] = await Promise.all([
+    metricRange(from, to).then((rows) => buildSeries(rows, from, to)),
+    metricRange(yearAgo.from, yearAgo.to).then((rows) =>
+      buildSeries(rows, yearAgo.from, yearAgo.to)
+    ),
+  ])
+
+  const currentKpis = computeKpis(currentSeries)
+  const yearAgoKpis = computeKpis(yearAgoSeries)
+
+  res.json({
+    period: {
+      from: formatDate(yearAgo.from),
+      to: formatDate(yearAgo.to),
+    },
+    kpis: yearAgoKpis,
+    series: yearAgoSeries,
+    current: {
+      period: { from: formatDate(from), to: formatDate(to) },
+      kpis: currentKpis,
+    },
+    deltas: {
+      totalRevenue: percentDelta(
+        currentKpis.totalRevenue,
+        yearAgoKpis.totalRevenue
+      ),
+      averagePerDay: percentDelta(
+        currentKpis.averagePerDay,
+        yearAgoKpis.averagePerDay
+      ),
+      totalCovers: percentDelta(
+        currentKpis.totalCovers,
+        yearAgoKpis.totalCovers
+      ),
+    },
+  })
+})
 
 dashboardRouter.get("/", async (req, res) => {
   const query = parseInput(dashboardQuerySchema, req.query)

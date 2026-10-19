@@ -69,6 +69,18 @@ export function previousRange(from: Date, to: Date): { from: Date; to: Date } {
   }
 }
 
+/**
+ * Same period 52 weeks (364 days) earlier. Shifting by 52 weeks instead of a
+ * calendar year keeps Monday-Sunday weeks aligned, which matters for a weekly
+ * dashboard.
+ */
+export function previousYearRange(
+  from: Date,
+  to: Date
+): { from: Date; to: Date } {
+  return { from: addDays(from, -364), to: addDays(to, -364) }
+}
+
 /** Percent change rounded to one decimal; null when there is no baseline. */
 export function percentDelta(current: number, previous: number): number | null {
   if (previous === 0) return null

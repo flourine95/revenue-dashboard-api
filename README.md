@@ -107,9 +107,10 @@ pnpm db:reset       # drop everything, re-apply migrations and re-seed
 
 `pnpm db:seed` (also run by `pnpm db:setup` and `pnpm db:reset`):
 
-- 12 weeks of daily metrics, **relative to the day you run it**, so the
-  dashboard always shows a full current week. The current week is filled
-  Monday–Sunday for demo purposes.
+- 60 weeks of daily metrics (~14 months), **relative to the day you run it**,
+  so the dashboard always shows a full current week and the year-over-year view
+  has data to compare. The current week is filled Monday–Sunday for demo
+  purposes.
 - 5 sample events (positive and negative) spread across the history.
 - The demo admin account described above.
 - Re-running the seed intentionally resets `daily_metrics` and `events`.
@@ -162,9 +163,10 @@ curl -b cookies.txt http://localhost:4000/api/auth/me
 
 ### Dashboard
 
-| Method | Path             | Auth | Description                   |
-| ------ | ---------------- | ---- | ----------------------------- |
-| GET    | `/api/dashboard` | —    | KPIs, chart series and events |
+| Method | Path                            | Auth | Description                             |
+| ------ | ------------------------------- | ---- | --------------------------------------- |
+| GET    | `/api/dashboard`                | —    | KPIs, chart series and events           |
+| GET    | `/api/dashboard/year-over-year` | —    | Same week 52 weeks earlier, with deltas |
 
 | Parameter | Default        | Meaning                                                             |
 | --------- | -------------- | ------------------------------------------------------------------- |

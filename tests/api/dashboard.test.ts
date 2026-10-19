@@ -138,3 +138,64 @@ describe("GET /api/dashboard", () => {
     expect(withoutComparison.body.budget).toEqual(expected)
   })
 })
+
+describe("GET /api/dashboard/year-over-year", () => {
+  it("compares the requested week with the same week one year earlier", async () => {
+    await createMetric("2026-10-12", {
+      pos: 200,
+      eatclub: 0,
+      labour: 60,
+      covers: 20,
+    })
+    await createMetric("2025-10-13", {
+      pos: 100,
+      eatclub: 0,
+      labour: 40,
+      covers: 10,
+    })
+
+    const response = await request(app).get(
+      "/api/dashboard/year-over-year?from=2026-10-12&to=2026-10-18"
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.body.period).toEqual({
+      from: "2025-10-13",
+      to: "2025-10-19",
+    })
+    expect(response.body.kpis.totalRevenue).toBe(100)
+    expect(response.body.series).toHaveLength(7)
+    expect(response.body.current.period).toEqual({
+      from: "2026-10-12",
+      to: "2026-10-18",
+    })
+    expect(response.body.current.kpis.totalRevenue).toBe(200)
+    expect(response.body.deltas.totalRevenue).toBe(100)
+    expect(response.body.deltas.totalCovers).toBe(100)
+  })
+
+  it("zero-fills the year-ago series and returns null deltas without a baseline", async () => {
+    const response = await request(app).get(
+      "/api/dashboard/year-over-year?from=2026-10-12&to=2026-10-18"
+    )
+
+    expect(response.status).toBe(200)
+    expect(response.body.kpis).toEqual({
+      totalRevenue: 0,
+      averagePerDay: 0,
+      totalCovers: 0,
+    })
+    expect(response.body.series).toHaveLength(7)
+    expect(
+      response.body.series.every((day: { covers: number }) => day.covers === 0)
+    ).toBe(true)
+    expect(response.body.deltas.totalRevenue).toBeNull()
+  })
+
+  it("rejects invalid ranges", async () => {
+    const response = await request(app).get(
+      "/api/dashboard/year-over-year?from=2026-10-18&to=2026-10-12"
+    )
+    expect(response.status).toBe(400)
+  })
+})

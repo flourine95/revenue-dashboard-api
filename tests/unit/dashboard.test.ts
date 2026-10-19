@@ -12,6 +12,7 @@ import {
   computeKpis,
   percentDelta,
   previousRange,
+  previousYearRange,
 } from "../../src/services/dashboard.js"
 
 /** Structural stub of a Prisma row; a Decimal only needs `toNumber()`. */
@@ -121,6 +122,17 @@ describe("previousRange", () => {
     )
     expect(formatDate(range.from)).toBe("2026-09-21")
     expect(formatDate(range.to)).toBe("2026-09-30")
+  })
+})
+
+describe("previousYearRange", () => {
+  it("moves the range back 52 weeks so weekdays stay aligned", () => {
+    expect(
+      previousYearRange(toUtcDate("2026-10-12"), toUtcDate("2026-10-18"))
+    ).toEqual({
+      from: toUtcDate("2025-10-13"),
+      to: toUtcDate("2025-10-19"),
+    })
   })
 })
 

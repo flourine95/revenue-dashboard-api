@@ -6,7 +6,9 @@ import { PrismaClient } from "../src/generated/prisma/client.js"
 const adapter = new PrismaPg({ connectionString: env.DATABASE_URL })
 const prisma = new PrismaClient({ adapter })
 
-const WEEKS_OF_HISTORY = 12
+// 60 weeks (~14 months) so the year-over-year comparison has data.
+const WEEKS_OF_HISTORY = 60
+const RECENT_GROWTH_WEEKS = 11
 const CURRENT_WEEK_BOOST = 0.045
 
 // Deterministic PRNG so repeated seeds produce the same values.
@@ -59,11 +61,15 @@ async function seedDailyMetrics(): Promise<number> {
 
   for (let weeksAgo = WEEKS_OF_HISTORY - 1; weeksAgo >= 0; weeksAgo--) {
     const weekMonday = addDays(currentMonday, -7 * weeksAgo)
+    // The last 12 weeks grow ~1.2% per week; older weeks stay flat so the
+    // year-over-year comparison shows a believable trend rather than +70%.
+    const growthWeeks = Math.min(
+      WEEKS_OF_HISTORY - 1 - weeksAgo,
+      RECENT_GROWTH_WEEKS
+    )
     // Current week lands ~+5–7% over the previous one, like the reference UI.
     const trend =
-      1 +
-      0.012 * (WEEKS_OF_HISTORY - 1 - weeksAgo) +
-      (weeksAgo === 0 ? CURRENT_WEEK_BOOST : 0)
+      1 + 0.012 * growthWeeks + (weeksAgo === 0 ? CURRENT_WEEK_BOOST : 0)
 
     for (let day = 0; day < 7; day++) {
       // Days after today are filled too, so the demo week always looks complete.
