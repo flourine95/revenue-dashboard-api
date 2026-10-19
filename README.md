@@ -1,11 +1,11 @@
-# Revenue Dashboard — API
+# Revenue Dashboard API
 
 REST API for the Revenue Dashboard coding challenge. It serves the dashboard
 KPI/chart data and provides authenticated CRUD endpoints used by the admin
 interface. Data is stored in PostgreSQL.
 
 > The frontend lives in a separate repository (`revenue-dashboard-ui`). Run
-> both together for the complete experience — see the frontend README.
+> both together for the complete experience. See the frontend README.
 
 ## Tech stack
 
@@ -24,11 +24,11 @@ interface. Data is stored in PostgreSQL.
 ## Prerequisites
 
 - **Node.js** 20.19+, 22.12+ or 24+ (22 LTS recommended)
-- **pnpm** — `npm install -g pnpm` (or `corepack enable`)
+- **pnpm**: `npm install -g pnpm` (or `corepack enable`)
 - **Docker** (Docker Desktop on macOS/Windows, Docker Engine + Compose plugin
-  on Linux) — only needed to run the local PostgreSQL container
+  on Linux), only needed to run the local PostgreSQL container
 
-## Quick start (from a fresh machine)
+## Run locally from a fresh machine
 
 ```bash
 # 1. Install dependencies
@@ -62,7 +62,7 @@ The seed creates an admin account from the values in `.env`:
 | --------------------- | ----------- |
 | `admin@revenue.local` | `admin1234` |
 
-These credentials are for **local development only** — never reuse them
+These credentials are for **local development only**. Never reuse them
 anywhere real.
 
 ## Environment variables
@@ -79,7 +79,7 @@ anywhere real.
 | `SEED_ADMIN_PASSWORD`   | `admin1234`                                       | Password of the seeded admin                                                     |
 | `SEED_ADMIN_NAME`       | `Admin`                                           | Display name of the seeded admin                                                 |
 
-`TEST_DATABASE_URL` is optional and only used by the test suite — see
+`TEST_DATABASE_URL` is optional and only used by the test suite. See
 [Tests](#tests).
 
 ## Database
@@ -109,7 +109,7 @@ pnpm db:reset       # drop everything, re-apply migrations and re-seed
 
 - 60 weeks of daily metrics (~14 months), **relative to the day you run it**,
   so the dashboard always shows a full current week and the year-over-year view
-  has data to compare. The current week is filled Monday–Sunday for demo
+  has data to compare. The current week is filled Monday to Sunday for demo
   purposes.
 - 5 sample events (positive and negative) spread across the history.
 - The demo admin account described above.
@@ -146,9 +146,9 @@ Validation failures return `422` with `VALIDATION_ERROR` and an
 
 | Method | Path               | Auth | Description                                   |
 | ------ | ------------------ | ---- | --------------------------------------------- |
-| POST   | `/api/auth/login`  | —    | `{ email, password }` → user + session cookie |
-| POST   | `/api/auth/logout` | —    | Ends the session and clears the cookie        |
-| GET    | `/api/auth/me`     | ✅   | The signed-in user                            |
+| POST   | `/api/auth/login`  | No   | `{ email, password }` → user + session cookie |
+| POST   | `/api/auth/logout` | No   | Ends the session and clears the cookie        |
+| GET    | `/api/auth/me`     | Yes  | The signed-in user                            |
 
 The session is an opaque token in an `httpOnly` cookie; only a SHA-256 hash
 of the token is stored in the database.
@@ -165,8 +165,8 @@ curl -b cookies.txt http://localhost:4000/api/auth/me
 
 | Method | Path                            | Auth | Description                             |
 | ------ | ------------------------------- | ---- | --------------------------------------- |
-| GET    | `/api/dashboard`                | —    | KPIs, chart series and events           |
-| GET    | `/api/dashboard/year-over-year` | —    | Same week 52 weeks earlier, with deltas |
+| GET    | `/api/dashboard`                | No   | KPIs, chart series and events           |
+| GET    | `/api/dashboard/year-over-year` | No   | Same week 52 weeks earlier, with deltas |
 
 | Parameter | Default        | Meaning                                                             |
 | --------- | -------------- | ------------------------------------------------------------------- |
@@ -303,16 +303,16 @@ vitest.config.ts        # test configuration
 
 ## Troubleshooting
 
-- **`Can't reach database server` (Prisma P1001)** — the container may still
+- **`Can't reach database server` (Prisma P1001)**: the container may still
   be starting. Check with `docker compose ps` until it reports `healthy`, and
   confirm `DATABASE_URL` in `.env` matches `docker-compose.yml`.
-- **Port 5432 already in use** — another PostgreSQL is running locally. Stop
+- **Port 5432 already in use**: another PostgreSQL is running locally. Stop
   it, or change the host port in `docker-compose.yml` and `DATABASE_URL`.
-- **Prisma client missing after cloning** — generated clients are not
+- **Prisma client missing after cloning**: generated clients are not
   committed. Run `pnpm db:generate` (or any `db:*` setup command).
-- **Tests cannot create the test database** — the database user needs
+- **Tests cannot create the test database**: the database user needs
   permission to create databases. Create `<database>_test` manually (or set
   `TEST_DATABASE_URL` to an existing empty database) and re-run `pnpm test`.
-- **Prisma Node.js version warning** — use Node 20.19+, 22.12+ or 24+.
-- **Docker not running** — start Docker Desktop / `sudo systemctl start docker`
+- **Prisma Node.js version warning**: use Node 20.19+, 22.12+ or 24+.
+- **Docker not running**: start Docker Desktop / `sudo systemctl start docker`
   and retry `pnpm db:up`.
