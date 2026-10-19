@@ -224,6 +224,29 @@ key is omitted when `compare=false`.
 }
 ```
 
+### Year-over-year
+
+`GET /api/dashboard/year-over-year` compares the requested week with the same
+week 52 weeks (364 days) earlier. It takes the same `from`/`to` parameters as
+`/api/dashboard` and defaults to the current week.
+
+```json
+{
+  "period": { "from": "2025-10-20", "to": "2025-10-26" },
+  "kpis": {
+    "totalRevenue": 16300,
+    "averagePerDay": 2328.57,
+    "totalCovers": 911
+  },
+  "series": ["…same shape as the dashboard series…"],
+  "current": {
+    "period": { "from": "2026-10-19", "to": "2026-10-25" },
+    "kpis": { "totalRevenue": 17934, "averagePerDay": 2562, "totalCovers": 986 }
+  },
+  "deltas": { "totalRevenue": 10, "averagePerDay": 10, "totalCovers": 8.2 }
+}
+```
+
 ### Admin (session cookie required)
 
 | Method | Path                       | Description                                                                              |
