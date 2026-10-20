@@ -1,5 +1,6 @@
 import { Router } from "express"
 import { z } from "zod"
+import { env } from "../config/env.js"
 import {
   SESSION_COOKIE,
   createSession,
@@ -11,21 +12,28 @@ import { prisma } from "../lib/prisma.js"
 import { parseInput } from "../lib/validation.js"
 import { readSessionToken, requireAuth } from "../middleware/auth.js"
 import { ApiError } from "../middleware/error.js"
+import { createLoginRateLimiter } from "../middleware/rate-limit.js"
 
 const loginSchema = z.object({
   email: z.email(),
   password: z.string().min(1, "Password is required"),
 })
 
+const loginLimiter = createLoginRateLimiter({
+  maxAttempts: env.LOGIN_MAX_ATTEMPTS,
+  windowMs: env.LOGIN_WINDOW_MINUTES * 60 * 1000,
+})
+
 export const authRouter = Router()
 
-authRouter.post("/login", async (req, res) => {
+authRouter.post("/login", loginLimiter.guard, async (req, res) => {
   const { email, password } = parseInput(loginSchema, req.body)
 
   const user = await prisma.user.findUnique({
     where: { email: email.trim().toLowerCase() },
   })
   if (user === null || !(await verifyPassword(password, user.passwordHash))) {
+    loginLimiter.recordFailure(req)
     // Deliberately the same error whether the email or the password failed.
     throw new ApiError(
       401,
@@ -34,6 +42,7 @@ authRouter.post("/login", async (req, res) => {
     )
   }
 
+  loginLimiter.reset(req)
   const { token, maxAge } = await createSession(user.id)
   res.cookie(SESSION_COOKIE, token, sessionCookieOptions(maxAge))
   res.json({ user: { id: user.id, email: user.email, name: user.name } })

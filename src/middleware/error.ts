@@ -26,6 +26,10 @@ export class ApiError extends Error {
   static conflict(message: string, details?: unknown): ApiError {
     return new ApiError(409, "CONFLICT", message, details)
   }
+
+  static tooManyRequests(message: string): ApiError {
+    return new ApiError(429, "TOO_MANY_REQUESTS", message)
+  }
 }
 
 export function notFoundHandler(req: Request, res: Response): void {

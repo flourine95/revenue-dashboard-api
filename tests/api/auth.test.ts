@@ -46,6 +46,32 @@ describe("POST /api/auth/login", () => {
     expect(response.status).toBe(422)
     expect(response.body.error.code).toBe("VALIDATION_ERROR")
   })
+
+  it("blocks further attempts after too many failures, then recovers", async () => {
+    const client = "198.51.100.7"
+    const attempt = () =>
+      request(app)
+        .post("/api/auth/login")
+        .set("X-Forwarded-For", client)
+        .send({ email: TEST_ADMIN.email, password: "wrong" })
+
+    // The limit is 5 by default; each failure is a 401 until it is used up.
+    for (let i = 0; i < 5; i += 1) {
+      expect((await attempt()).status).toBe(401)
+    }
+
+    const blocked = await attempt()
+    expect(blocked.status).toBe(429)
+    expect(blocked.body.error.code).toBe("TOO_MANY_REQUESTS")
+    expect(blocked.headers["retry-after"]).toBeDefined()
+
+    // A different client is unaffected.
+    const other = await request(app)
+      .post("/api/auth/login")
+      .set("X-Forwarded-For", "198.51.100.8")
+      .send({ email: TEST_ADMIN.email, password: "wrong" })
+    expect(other.status).toBe(401)
+  })
 })
 
 describe("GET /api/auth/me", () => {
