@@ -2,7 +2,7 @@
 
 REST API for the Revenue Dashboard coding challenge. It serves the dashboard KPI/chart data and provides authenticated CRUD endpoints used by the admin interface. Data is stored in PostgreSQL.
 
-> The frontend lives in a separate repository (`revenue-dashboard-ui`). Run both together for the complete experience. See the frontend README.
+> The frontend lives in a separate repository: [revenue-dashboard-ui](https://github.com/flourine95/revenue-dashboard-ui). Run both together for the complete experience. Overview of the whole project: [revenue-dashboard](https://github.com/flourine95/revenue-dashboard).
 
 ## Tech stack
 
