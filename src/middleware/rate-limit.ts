@@ -15,19 +15,27 @@ type Attempt = { failures: number; windowStart: number }
 export function createLoginRateLimiter({
   maxAttempts,
   windowMs,
+  trustProxy = false,
   now = () => Date.now(),
 }: {
   maxAttempts: number
   windowMs: number
+  /**
+   * Read the client address from `X-Forwarded-For`. Only enable this when a
+   * proxy you control sets that header: a client can forge it otherwise, which
+   * both evades the limit and lets an attacker lock out someone else's address.
+   */
+  trustProxy?: boolean
   now?: () => number
 }) {
   const attempts = new Map<string, Attempt>()
 
   function key(req: Request): string {
-    // Behind a proxy the client address is in the first forwarded entry.
-    const forwarded = req.get("x-forwarded-for")
-    if (forwarded !== undefined && forwarded.length > 0) {
-      return forwarded.split(",")[0]?.trim() ?? req.ip ?? "unknown"
+    if (trustProxy) {
+      const forwarded = req.get("x-forwarded-for")
+      if (forwarded !== undefined && forwarded.length > 0) {
+        return forwarded.split(",")[0]?.trim() ?? req.ip ?? "unknown"
+      }
     }
     return req.ip ?? "unknown"
   }
@@ -68,6 +76,10 @@ export function createLoginRateLimiter({
     /** Called after a successful login so the window resets. */
     reset(req: Request): void {
       attempts.delete(key(req))
+    },
+    /** Drops every counter. Used by tests that share one client address. */
+    clear(): void {
+      attempts.clear()
     },
   }
 }

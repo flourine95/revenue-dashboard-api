@@ -85,14 +85,59 @@ describe("createLoginRateLimiter", () => {
     ).not.toThrow()
   })
 
-  it("tracks clients independently and honours X-Forwarded-For", () => {
+  it("tracks clients independently", () => {
     const limiter = createLoginRateLimiter({
       maxAttempts: 1,
       windowMs: 60_000,
       now: () => 0,
     })
     const first = fakeReq("10.0.0.1")
-    const second = fakeReq("10.0.0.2", "203.0.113.9, 10.0.0.1")
+    const second = fakeReq("10.0.0.2")
+
+    limiter.guard(first as never, fakeRes() as never, () => {})
+    limiter.recordFailure(first as never)
+
+    expect(() =>
+      limiter.guard(first as never, fakeRes() as never, () => {})
+    ).toThrow()
+    expect(() =>
+      limiter.guard(second as never, fakeRes() as never, () => {})
+    ).not.toThrow()
+  })
+
+  it("ignores a forged X-Forwarded-For unless a proxy is trusted", () => {
+    const limiter = createLoginRateLimiter({
+      maxAttempts: 2,
+      windowMs: 60_000,
+      now: () => 0,
+    })
+
+    // Same socket address, a fresh forged header on every attempt.
+    for (let i = 0; i < 2; i += 1) {
+      const req = fakeReq("10.0.0.1", `198.51.100.${i}`)
+      expect(() =>
+        limiter.guard(req as never, fakeRes() as never, () => {})
+      ).not.toThrow()
+      limiter.recordFailure(req as never)
+    }
+
+    const spoofed = fakeReq("10.0.0.1", "198.51.100.250")
+    expect(() =>
+      limiter.guard(spoofed as never, fakeRes() as never, () => {})
+    ).toThrow()
+  })
+
+  it("uses the forwarded address once a proxy is trusted", () => {
+    const limiter = createLoginRateLimiter({
+      maxAttempts: 1,
+      windowMs: 60_000,
+      trustProxy: true,
+      now: () => 0,
+    })
+
+    // Two clients share one socket address, as they do behind a reverse proxy.
+    const first = fakeReq("10.0.0.1", "203.0.113.4, 10.0.0.1")
+    const second = fakeReq("10.0.0.1", "203.0.113.5, 10.0.0.1")
 
     limiter.guard(first as never, fakeRes() as never, () => {})
     limiter.recordFailure(first as never)

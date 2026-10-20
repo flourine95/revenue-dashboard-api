@@ -22,9 +22,13 @@ const loginSchema = z.object({
 const loginLimiter = createLoginRateLimiter({
   maxAttempts: env.LOGIN_MAX_ATTEMPTS,
   windowMs: env.LOGIN_WINDOW_MINUTES * 60 * 1000,
+  trustProxy: env.TRUST_PROXY,
 })
 
 export const authRouter = Router()
+
+/** Exposed so tests can isolate the shared in-memory counters. */
+export const authTestHooks = { clearLoginLimiter: () => loginLimiter.clear() }
 
 authRouter.post("/login", loginLimiter.guard, async (req, res) => {
   const { email, password } = parseInput(loginSchema, req.body)

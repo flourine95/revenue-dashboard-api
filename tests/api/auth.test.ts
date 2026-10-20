@@ -2,6 +2,7 @@ import request from "supertest"
 import { beforeEach, describe, expect, it } from "vitest"
 import { createApp } from "../../src/app.js"
 import { prisma } from "../../src/lib/prisma.js"
+import { authTestHooks } from "../../src/routes/auth.js"
 import { TEST_ADMIN, createAdmin, resetDb } from "../helpers.js"
 
 const app = createApp()
@@ -9,6 +10,9 @@ const app = createApp()
 beforeEach(async () => {
   await resetDb()
   await createAdmin()
+  // The limiter is in memory and keyed on the socket address, which every
+  // request in this file shares.
+  authTestHooks.clearLoginLimiter()
 })
 
 describe("POST /api/auth/login", () => {
@@ -48,11 +52,9 @@ describe("POST /api/auth/login", () => {
   })
 
   it("blocks further attempts after too many failures, then recovers", async () => {
-    const client = "198.51.100.7"
     const attempt = () =>
       request(app)
         .post("/api/auth/login")
-        .set("X-Forwarded-For", client)
         .send({ email: TEST_ADMIN.email, password: "wrong" })
 
     // The limit is 5 by default; each failure is a 401 until it is used up.
@@ -65,12 +67,26 @@ describe("POST /api/auth/login", () => {
     expect(blocked.body.error.code).toBe("TOO_MANY_REQUESTS")
     expect(blocked.headers["retry-after"]).toBeDefined()
 
-    // A different client is unaffected.
-    const other = await request(app)
+    // A correct password cannot get past an exhausted window either.
+    const correct = await request(app)
       .post("/api/auth/login")
-      .set("X-Forwarded-For", "198.51.100.8")
-      .send({ email: TEST_ADMIN.email, password: "wrong" })
-    expect(other.status).toBe(401)
+      .send({ email: TEST_ADMIN.email, password: TEST_ADMIN.password })
+    expect(correct.status).toBe(429)
+  })
+
+  it("ignores a forged X-Forwarded-For when no proxy is trusted", async () => {
+    const attempt = (forwarded: string) =>
+      request(app)
+        .post("/api/auth/login")
+        .set("X-Forwarded-For", forwarded)
+        .send({ email: TEST_ADMIN.email, password: "wrong" })
+
+    for (let i = 0; i < 5; i += 1) {
+      expect((await attempt(`198.51.100.${i}`)).status).toBe(401)
+    }
+
+    // Changing the header does not grant a fresh window.
+    expect((await attempt("198.51.100.250")).status).toBe(429)
   })
 })
 

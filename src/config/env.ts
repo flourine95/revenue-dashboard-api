@@ -11,6 +11,10 @@ const envSchema = z.object({
   SESSION_TTL_DAYS: z.coerce.number().int().positive().default(7),
   LOGIN_MAX_ATTEMPTS: z.coerce.number().int().positive().default(5),
   LOGIN_WINDOW_MINUTES: z.coerce.number().int().positive().default(15),
+  TRUST_PROXY: z
+    .enum(["true", "false"])
+    .default("false")
+    .transform((value) => value === "true"),
   BUDGET_WEEKLY_REVENUE: z.coerce.number().nonnegative().default(20000),
   SEED_ADMIN_EMAIL: z.string().default("admin@revenue.local"),
   SEED_ADMIN_PASSWORD: z.string().default("admin1234"),

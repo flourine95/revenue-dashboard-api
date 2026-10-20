@@ -11,6 +11,10 @@ import { healthRouter } from "./routes/health.js"
 export function createApp(): express.Express {
   const app = express()
 
+  // Only believe X-Forwarded-For when a proxy in front of the API sets it.
+  // Otherwise a client could forge its address and evade the login limit.
+  app.set("trust proxy", env.TRUST_PROXY)
+
   app.use(
     cors({
       origin: env.CORS_ORIGIN,

@@ -60,6 +60,7 @@ These credentials are for local development only. Do not reuse them anywhere els
 | `SESSION_TTL_DAYS` | `7` | Admin session lifetime |
 | `LOGIN_MAX_ATTEMPTS` | `5` | Failed sign-ins allowed per client before a temporary lockout |
 | `LOGIN_WINDOW_MINUTES` | `15` | Length of the failed-attempt window, in minutes |
+| `TRUST_PROXY` | `false` | Read the client address from `X-Forwarded-For`. Enable only behind a proxy you control |
 | `BUDGET_WEEKLY_REVENUE` | `20000` | Weekly revenue budget exposed as `budget.weeklyRevenue` in the dashboard payload |
 | `SEED_ADMIN_EMAIL` | `admin@revenue.local` | Email of the seeded admin |
 | `SEED_ADMIN_PASSWORD` | `admin1234` | Password of the seeded admin |
@@ -128,7 +129,9 @@ Validation failures return `422` with `VALIDATION_ERROR` and an `error.details.i
 
 The session is an opaque token in an `httpOnly` cookie; only a SHA-256 hash of the token is stored in the database.
 
-Repeated failures from one client are limited: after `LOGIN_MAX_ATTEMPTS` wrong passwords inside `LOGIN_WINDOW_MINUTES`, further attempts return `429` with `TOO_MANY_REQUESTS` and a `Retry-After` header. A successful sign-in clears the counter. The client is identified by `X-Forwarded-For` when present, otherwise by its socket address.
+Repeated failures from one client are limited: after `LOGIN_MAX_ATTEMPTS` wrong passwords inside `LOGIN_WINDOW_MINUTES`, further attempts return `429` with `TOO_MANY_REQUESTS` and a `Retry-After` header. A successful sign-in clears the counter.
+
+The client is identified by its socket address. `X-Forwarded-For` is only read when `TRUST_PROXY=true`, because without a proxy in front of the API any client can set that header: doing so would both evade the limit and let an attacker lock out someone else's address. Behind a reverse proxy, set `TRUST_PROXY=true` so each real client gets its own counter.
 
 ```bash
 curl -c cookies.txt -X POST http://localhost:4000/api/auth/login \
