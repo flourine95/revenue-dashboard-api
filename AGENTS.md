@@ -25,7 +25,7 @@ it first, so never point `TEST_DATABASE_URL` at data you care about.
 
 ## Agent skills
 
-Official Prisma agent skills live in `.agents/skills/` (canonical; pinned by `skills-lock.json`). Keep them there instead of duplicating into tool-specific folders like `.claude/` or `.windsurf/`. Refresh: `pnpm dlx skills@1.5.14 add prisma/skills --agent cursor claude-code codex windsurf --skill "*" -y`.
+Three Prisma reference skills used by this codebase live in `.agents/skills/` (`prisma-cli`, `prisma-client-api`, `prisma-postgres-setup`), pinned by `skills-lock.json`. The unrelated ones (MongoDB, Prisma Compute, upgrade guides) were removed to keep the checkout small. Refresh: `pnpm dlx skills@1.5.14 add prisma/skills --skill prisma-cli --skill prisma-client-api --skill prisma-postgres-setup -y`.
 
 ## Conventions
 
