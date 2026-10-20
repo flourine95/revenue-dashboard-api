@@ -1,10 +1,10 @@
 # Revenue Dashboard API
 
-REST API for the Revenue Dashboard coding challenge. It serves the dashboard KPI/chart data and provides authenticated CRUD endpoints used by the admin interface. Data is stored in PostgreSQL.
+REST API for the Revenue Dashboard coding challenge. It serves the data behind the dashboard and exposes the CRUD endpoints the admin screens use, backed by PostgreSQL.
 
-> The frontend lives in a separate repository: [revenue-dashboard-ui](https://github.com/flourine95/revenue-dashboard-ui). Run both together for the complete experience. Overview of the whole project: [revenue-dashboard](https://github.com/flourine95/revenue-dashboard).
+> The frontend is a separate repository: [revenue-dashboard-ui](https://github.com/flourine95/revenue-dashboard-ui). The project overview is [revenue-dashboard](https://github.com/flourine95/revenue-dashboard).
 
-## Tech stack
+## Stack
 
 | Concern    | Choice                                       |
 | ---------- | -------------------------------------------- |
@@ -14,34 +14,25 @@ REST API for the Revenue Dashboard coding challenge. It serves the dashboard KPI
 | Validation | Zod                                          |
 | Auth       | Server-side sessions, httpOnly cookie        |
 
-> Prisma packages are pinned to the latest **stable** major (v7, `prisma@prev`) on purpose: Prisma ORM 8 was still a release candidate at the time of writing, and v7 remains fully supported.
+Prisma is pinned to v7, the latest stable major. Version 8 was still a release candidate.
 
-## Prerequisites
+## Setup
+
+You need:
 
 - **Node.js** 20.19+, 22.12+ or 24+ (22 LTS recommended)
-- **pnpm**: `npm install -g pnpm` (or `corepack enable`)
-- **Docker** (Docker Desktop on macOS/Windows, Docker Engine + Compose plugin on Linux), only needed to run the local PostgreSQL container
-
-## Run locally from a fresh machine
+- **pnpm** 12.11.2: `corepack enable && corepack prepare pnpm@12.11.2 --activate`
+- **Docker**: Docker Desktop on macOS or Windows, or Docker Engine with the Compose plugin on Linux. You need it only for the local PostgreSQL container.
 
 ```bash
-# 1. Install dependencies
 pnpm install
-
-# 2. Create your local environment file
 cp .env.example .env
-
-# 3. Start PostgreSQL (downloads postgres:17-alpine on first run)
-pnpm db:up
-
-# 4. Apply migrations, generate the Prisma client and load demo data
-pnpm db:setup
-
-# 5. Start the API in watch mode
+pnpm db:up        # downloads postgres:17-alpine on the first run
+pnpm db:setup     # migrate, generate the Prisma client, load demo data
 pnpm dev
 ```
 
-Check that everything works:
+Confirm the API answers:
 
 ```bash
 curl http://localhost:4000/health
@@ -50,13 +41,13 @@ curl http://localhost:4000/health
 
 ### Demo admin account
 
-The seed creates an admin account from the values in `.env`:
+`pnpm db:setup` creates this account from the values in `.env`:
 
 | Email                 | Password    |
 | --------------------- | ----------- |
 | `admin@revenue.local` | `admin1234` |
 
-These credentials are for **local development only**. Never reuse them anywhere real.
+These credentials are for local development only. Do not reuse them anywhere else.
 
 ## Environment variables
 
@@ -101,7 +92,7 @@ pnpm db:reset       # drop everything, re-apply migrations and re-seed
 
 `pnpm db:seed` (also run by `pnpm db:setup` and `pnpm db:reset`):
 
-- 60 weeks of daily metrics (~14 months), **relative to the day you run it**, so the dashboard always shows a full current week and the year-over-year view has data to compare. The current week is filled Monday to Sunday for demo purposes.
+- 60 weeks of daily metrics (about 14 months), counted back from the day you run the seed, so the dashboard always has a full current week and the year-over-year view has a year to compare. The current week is filled Monday to Sunday for demo purposes.
 - 5 sample events (positive and negative) spread across the history.
 - The demo admin account described above.
 - Re-running the seed intentionally resets `daily_metrics` and `events`.
@@ -113,7 +104,7 @@ pnpm test        # run once (Vitest + supertest)
 pnpm test:watch  # watch mode
 ```
 
-The suite covers the period/KPI math (unit) and the API endpoints end to end (integration). Integration tests run against a dedicated `<database>_test` database that is created and migrated automatically on the first run; each test file truncates it first, so it never touches your development data. Set `TEST_DATABASE_URL` to use a different database name or server for tests.
+The suite covers the period and KPI maths as unit tests and the endpoints end to end. The integration tests use a dedicated `<database>_test` database, created and migrated on the first run, and truncate it before each file, so your development data is never touched. Set `TEST_DATABASE_URL` to point them at another database or server.
 
 ## API endpoints
 
@@ -239,7 +230,7 @@ curl -b cookies.txt http://localhost:4000/api/auth/me
 | PATCH | `/api/admin/events/:id` | Update any subset of the event fields |
 | DELETE | `/api/admin/events/:id` | Delete an event (`204`; `404` when it does not exist) |
 
-Every request without a valid session cookie is rejected with `401` (`UNAUTHORIZED`) by the API itself, not just by the UI.
+Every request without a valid session cookie is rejected with `401` (`UNAUTHORIZED`) by the API itself.
 
 ## Scripts reference
 
@@ -265,15 +256,15 @@ prisma/
   seed.ts               # demo data generator
 src/
   app.ts                # express app wiring (middleware, routes)
-  index.ts              # server bootstrap + shutdown on SIGINT/SIGTERM
+  index.ts              # server bootstrap and SIGINT/SIGTERM handling
   config/env.ts         # validated environment variables
   lib/                  # prisma client, dates, auth, validation, serializers
-  middleware/           # ApiError handling + session auth guard
+  middleware/           # ApiError handling and the session auth guard
   routes/               # auth, dashboard and admin route handlers
-  services/             # period/KPI aggregation (pure functions)
+  services/             # period and KPI aggregation (pure functions)
   generated/prisma/     # generated Prisma client (not committed)
 tests/
-  unit/                 # pure period/KPI math
+  unit/                 # pure period and KPI maths
   api/                  # endpoint tests against a throwaway database
 prisma7.config.ts       # Prisma CLI config (schema, migrations, seed)
 docker-compose.yml      # local PostgreSQL 17
@@ -282,9 +273,14 @@ vitest.config.ts        # test configuration
 
 ## Troubleshooting
 
-- **`Can't reach database server` (Prisma P1001)**: the container may still be starting. Check with `docker compose ps` until it reports `healthy`, and confirm `DATABASE_URL` in `.env` matches `docker-compose.yml`.
-- **Port 5432 already in use**: another PostgreSQL is running locally. Stop it, or change the host port in `docker-compose.yml` and `DATABASE_URL`.
-- **Prisma client missing after cloning**: generated clients are not committed. Run `pnpm db:generate` (or any `db:*` setup command).
-- **Tests cannot create the test database**: the database user needs permission to create databases. Create `<database>_test` manually (or set `TEST_DATABASE_URL` to an existing empty database) and re-run `pnpm test`.
-- **Prisma Node.js version warning**: use Node 20.19+, 22.12+ or 24+.
-- **Docker not running**: start Docker Desktop / `sudo systemctl start docker` and retry `pnpm db:up`.
+`Can't reach database server` (Prisma P1001) means PostgreSQL is not accepting connections yet. Run `docker compose ps` until the container reports `healthy`, then check that `DATABASE_URL` in `.env` matches `docker-compose.yml`.
+
+If port 5432 is taken, another PostgreSQL is running locally. Stop it, or change the host port in `docker-compose.yml` together with `DATABASE_URL`.
+
+A missing Prisma client after cloning is expected: the client is generated, not committed. Run `pnpm db:generate`, or any `db:` command that includes it.
+
+Tests that cannot create their database need a user with the `CREATEDB` right. Create `<database>_test` by hand, or point `TEST_DATABASE_URL` at an empty database, then run `pnpm test` again.
+
+If Prisma warns about the Node.js version, move to 20.19+, 22.12+ or 24+.
+
+If `pnpm db:up` fails to reach Docker, start Docker Desktop or run `sudo systemctl start docker`.
